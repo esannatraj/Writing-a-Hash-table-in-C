@@ -36,3 +36,14 @@ void ht_del_hash_table(ht_hash_table* ht) {
     free(ht->items);
     free(ht);
 }
+
+static int ht_hash(char* s, const int a, const int m) {
+    long hash = 0;
+    const int len_s = strlen(s);
+    for (int i = 0; i < len_s; i++) {
+        hash += (long)pow(a, len_s - (i+1)) * s[i];
+        hash = hash % m; //Mathematically the same as applying incrementally vs applying it at the end
+    }
+
+    return (int)hash;
+}
