@@ -20,3 +20,8 @@ ht_hash_table* ht_new() {
     return ht;
 }
 
+static void ht_del_item(ht_item* i) {
+    free(i->key);
+    free(i->value);
+    free(i);
+}
