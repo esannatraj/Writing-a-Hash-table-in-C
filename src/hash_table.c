@@ -57,3 +57,11 @@ static int ht_hash(char* s, const int a, const int m) {
 
     return (int)hash; // Returns the computed hash value as an integer.
 }
+
+// Computes a hash for the given string `s` using double hashing.
+static int ht_get_hash(const char* s, const int num_buckets, const int attempts) {
+    const int hash_a = ht_hash(s, HT_PRIME_1, num_buckets); // Primary hash determines the initial bucket index.
+    const int hash_b = ht_hash(s, HT_PRIME_2, num_buckets); // Secondary hash determines the step size for probing.
+
+    return (hash_a + (attempt * (hash_b + 1))) % num_buckets; // Combine hashes and calculate the final bucket index, wrapping with modulo.
+}
