@@ -6,6 +6,7 @@
 // Prime numbers for double hashing
 static const int HT_PRIME_1 = 31;
 static const int HT_PRIME_2 = 37;
+static ht_item HT_DELETED_ITEM = {NULL, NULL};
 
 // Creates a new hash table item (key-value pair).
 static ht_item* ht_new_item(char* k, char* v) {
@@ -75,7 +76,7 @@ void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
     int index = ht_get_hash(item->key, ht->size, 0); // Compute initial bucket index.
     ht_item* cur_item = ht->items[index]; // Get the current item at the bucket.
     int i = 1; // Initialize probe attempt counter.
-    while (cur_item != NULL) { // Continue probing if the bucket is occupied.
+    while (cur_item != NULL && cur_item !=  &HT_DELETED_ITEM) { // Continue probing if the bucket is occupied.
         index = ht_get_hash(item->key, ht->size, i); // Compute the next index.
         cur_item = ht->items[index]; // Check the next bucket.
         i++; // Increment probe attempt counter.
@@ -89,14 +90,34 @@ char* ht_search(ht_hash_table* ht, const char* key) {
     int index = ht_get_hash(key, ht->size, 0); // Compute initial bucket index.
     ht_item* item = ht->items[index];         // Get the item at the initial index.
     int i = 1;                                // Initialize probe attempt counter.
-
-    while (item != NULL) {                    // Continue probing if the bucket is not empty.
-        if (strcmp(item->key, key) == 0) {    // Check if the current item's key matches the search key.
+    while (item != NULL) { // Continue probing if the bucket is not empty.
+        if (item != &HT_DELETED_ITEM) { //If the bucket does not contain an item marked deleted
+            if (strcmp(item->key, key) == 0) { // Check if the current item's key matches the search key.
             return item->value;               // Return the value if the key matches.
-        }
+            }
+        }        
         index = ht_get_hash(key, ht->size, i); // Compute the next index using double hashing.
         item = ht->items[index];              // Check the item at the new index.
         i++;                                  // Increment probe attempt counter.
     }
     return NULL;                              // Return NULL if the key is not found.
+}
+
+// Delete an item from the hash table by key.
+void ht_delete(ht_hash_table* ht, const char* key) {
+    int index = ht_get_hash(key, ht->size, 0); // Compute initial bucket index.
+    ht_item* item = ht->items[index];         // Get the item at the initial index.
+    int i = 1;                                // Initialize probe attempt counter.
+    while (item != NULL) {                    // Continue probing until an empty bucket is found.
+        if (item != &HT_DELETED_ITEM) {       // Skip already deleted buckets.
+            if (strcmp(item->key, key) == 0) { // Check if the current item's key matches.
+                ht_del_item(item);            // Free memory for the matched item.
+                ht->items[index] = &HT_DELETED_ITEM; // Mark the bucket as deleted.
+            }
+        }
+        index = ht_get_hash(key, ht->size, i); // Compute the next index using double hashing.
+        item = ht->items[index];              // Get the item at the new index.
+        i++;                                  // Increment probe attempt counter.
+    }
+    ht->count--;                              // Decrease the count of items in the hash table.
 }
