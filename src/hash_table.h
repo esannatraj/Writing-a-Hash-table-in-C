@@ -10,3 +10,7 @@ typedef struct {
     int count;     // Number of items currently stored in the hash table.
     ht_item** items; // Array of pointers to ht_item (buckets for key-value pairs).
 } ht_hash_table;
+
+void ht_insert(ht_hash_table* ht, const char* key, const char* value);
+char* ht_search(ht_hash_table* ht, const char* key);
+void ht_delete(ht_hash_table* ht, const char* key);
