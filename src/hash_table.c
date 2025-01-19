@@ -3,6 +3,10 @@
 
 #include "hash_table.h"
 
+// Prime numbers for double hashing
+static const int HT_PRIME_1 = 31;
+static const int HT_PRIME_2 = 37;
+
 // Creates a new hash table item (key-value pair).
 static ht_item* ht_new_item(char* k, char* v) {
     ht_item* i = malloc(sizeof(ht_item)); // Allocates memory for the item.
@@ -17,8 +21,7 @@ ht_hash_table* ht_new() {
     ht_hash_table* ht = malloc(sizeof(ht_hash_table)); // Allocates memory for the hash table.
     ht->size = 53;                                    // Sets the initial size of the hash table (prime number).
     ht->count = 0;                                    // Initializes the item count to 0.
-    ht->items = calloc((size_t)ht->size, sizeof(ht_item*)); 
-    // Allocates and zeroes out memory for the array of pointers (buckets).
+    ht->items = calloc((size_t)ht->size, sizeof(ht_item*)); // Allocates and zeroes out memory for the array of pointers (buckets).
 
     return ht; // Returns a pointer to the newly created hash table.
 }
@@ -63,5 +66,21 @@ static int ht_get_hash(const char* s, const int num_buckets, const int attempts)
     const int hash_a = ht_hash(s, HT_PRIME_1, num_buckets); // Primary hash determines the initial bucket index.
     const int hash_b = ht_hash(s, HT_PRIME_2, num_buckets); // Secondary hash determines the step size for probing.
 
-    return (hash_a + (attempt * (hash_b + 1))) % num_buckets; // Combine hashes and calculate the final bucket index, wrapping with modulo.
+    return (hash_a + (attempts * (hash_b + 1))) % num_buckets; // Combine hashes and calculate the final bucket index, wrapping with modulo.
 }
+
+// Inserts a new item into the hash table
+void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
+    ht_item* item = ht_new_item(key, value); // Create a new key-value item.
+    int index = ht_get_hash(item->key, ht->size, 0); // Compute initial bucket index.
+    ht_item* cur_item = ht->items[index]; // Get the current item at the bucket.
+    int i = 1; // Initialize probe attempt counter.
+    while (cur_item != NULL) { // Continue probing if the bucket is occupied.
+        index = ht_get_hash(item->key, ht->size, i); // Compute the next index.
+        cur_item = ht->items[index]; // Check the next bucket.
+        i++; // Increment probe attempt counter.
+    }
+    ht->items[index] = item; // Place the item in the first empty bucket.
+    ht->count++; // Increment the count of items in the hash table.
+}
+
