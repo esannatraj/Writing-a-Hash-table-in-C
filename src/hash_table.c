@@ -84,3 +84,19 @@ void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
     ht->count++; // Increment the count of items in the hash table.
 }
 
+// Search for a value in the hash table by key.
+char* ht_search(ht_hash_table* ht, const char* key) {
+    int index = ht_get_hash(key, ht->size, 0); // Compute initial bucket index.
+    ht_item* item = ht->items[index];         // Get the item at the initial index.
+    int i = 1;                                // Initialize probe attempt counter.
+
+    while (item != NULL) {                    // Continue probing if the bucket is not empty.
+        if (strcmp(item->key, key) == 0) {    // Check if the current item's key matches the search key.
+            return item->value;               // Return the value if the key matches.
+        }
+        index = ht_get_hash(key, ht->size, i); // Compute the next index using double hashing.
+        item = ht->items[index];              // Check the item at the new index.
+        i++;                                  // Increment probe attempt counter.
+    }
+    return NULL;                              // Return NULL if the key is not found.
+}
