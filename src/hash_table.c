@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <math.h>   
+
 
 #include "hash_table.h"
 #include "prime.h"
@@ -10,8 +13,13 @@ static const int HT_PRIME_2 = 37;
 static ht_item HT_DELETED_ITEM = {NULL, NULL};
 static int HT_INITIAL_BASE_SIZE = 53;
 
+static ht_item* ht_new_item(const char* k, const char* v);
+static int ht_hash(const char* s, const int a, const int m);
+static void ht_resize_up(ht_hash_table* ht);
+static void ht_resize_down(ht_hash_table* ht);
+
 // Creates a new hash table item (key-value pair).
-static ht_item* ht_new_item(char* k, char* v) {
+static ht_item* ht_new_item(const char* k, const char* v) {
     ht_item* i = malloc(sizeof(ht_item)); // Allocates memory for the item.
     i->key = strdup(k);                  // Creates a copy of the key string.
     i->value = strdup(v);                // Creates a copy of the value string.
@@ -21,14 +29,14 @@ static ht_item* ht_new_item(char* k, char* v) {
 
 // Creates a new hash table with a specified base size.
 static ht_hash_table* ht_new_sized(const int base_size) {
-    ht_hash_table* ht = xmalloc(sizeof(ht_hash_table)); // Allocate memory for the hash table structure.
+    ht_hash_table* ht = malloc(sizeof(ht_hash_table)); // Allocate memory for the hash table structure.
     ht->base_size = base_size;                         // Store the base size for resizing logic.
 
     ht->size = next_prime(ht->base_size);              // Set the table size to the next prime >= base_size.
     ht->count = 0;                                     // Initialize the count of items to 0.
 
     // Allocate memory for the hash table buckets, initializing all to NULL.
-    ht->items = xcalloc((size_t)ht->size, sizeof(ht_item*));
+    ht->items = calloc((size_t)ht->size, sizeof(ht_item*));
     return ht;                                         // Return the initialized hash table.
 }
 
@@ -58,7 +66,7 @@ void ht_del_hash_table(ht_hash_table* ht) {
 }
 
 // Hashes a string to a bucket index using a custom hash function.
-static int ht_hash(char* s, const int a, const int m) {
+static int ht_hash(const char* s, const int a, const int m) {
     long hash = 0;               // Initializes the hash value.
     const int len_s = strlen(s); // Gets the length of the string.
 
