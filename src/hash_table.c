@@ -83,6 +83,10 @@ static int ht_get_hash(const char* s, const int num_buckets, const int attempts)
 
 // Inserts a new item into the hash table, replacing any existing item with the same key.
 void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
+    const int load = ht->count * 100 / ht->size; // Avoids dealing with floating points
+    if (load > 70) {
+        ht_resize_up(ht);
+    }
     ht_item* item = ht_new_item(key, value); // Create a new key-value item.
     int index = ht_get_hash(item->key, ht->size, 0); // Compute initial bucket index.
     ht_item* cur_item = ht->items[index]; // Get the current item at the bucket.
@@ -129,6 +133,10 @@ char* ht_search(ht_hash_table* ht, const char* key) {
 
 // Delete an item from the hash table by key.
 void ht_delete(ht_hash_table* ht, const char* key) {
+    const int load = ht->count * 100 / ht->size;
+    if (load < 10) {
+        ht_resize_down(ht);
+    }
     int index = ht_get_hash(key, ht->size, 0); // Compute initial bucket index.
     ht_item* item = ht->items[index];         // Get the item at the initial index.
     int i = 1;                                // Initialize probe attempt counter.
