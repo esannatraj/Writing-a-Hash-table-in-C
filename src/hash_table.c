@@ -70,20 +70,33 @@ static int ht_get_hash(const char* s, const int num_buckets, const int attempts)
     return (hash_a + (attempts * (hash_b + 1))) % num_buckets; // Combine hashes and calculate the final bucket index, wrapping with modulo.
 }
 
-// Inserts a new item into the hash table
+// Inserts a new item into the hash table, replacing any existing item with the same key.
 void ht_insert(ht_hash_table* ht, const char* key, const char* value) {
     ht_item* item = ht_new_item(key, value); // Create a new key-value item.
     int index = ht_get_hash(item->key, ht->size, 0); // Compute initial bucket index.
     ht_item* cur_item = ht->items[index]; // Get the current item at the bucket.
     int i = 1; // Initialize probe attempt counter.
-    while (cur_item != NULL && cur_item !=  &HT_DELETED_ITEM) { // Continue probing if the bucket is occupied.
+    // Check if an item with the same key already exists.
+    while (cur_item != NULL) {
+        while (cur_item != &HT_DELETED_ITEM) { // Skip deleted buckets.
+            if (strcmp(cur_item->key, key) == 0) { // Check if keys match.
+                ht_del_item(cur_item); // Delete the existing item to avoid duplication.
+                ht->items[index] = item; // Replace the item at the current bucket.
+                return; // Exit after replacing the item.
+            }
+        }
+    }
+    // Continue probing until an empty or deleted bucket is found.
+    while (cur_item != NULL && cur_item != &HT_DELETED_ITEM) {
         index = ht_get_hash(item->key, ht->size, i); // Compute the next index.
         cur_item = ht->items[index]; // Check the next bucket.
         i++; // Increment probe attempt counter.
     }
-    ht->items[index] = item; // Place the item in the first empty bucket.
+
+    ht->items[index] = item; // Place the item in the first empty or deleted bucket.
     ht->count++; // Increment the count of items in the hash table.
 }
+
 
 // Search for a value in the hash table by key.
 char* ht_search(ht_hash_table* ht, const char* key) {
