@@ -2,11 +2,13 @@
 #include <string.h>
 
 #include "hash_table.h"
+#include "prime.h"
 
 // Prime numbers for double hashing
 static const int HT_PRIME_1 = 31;
 static const int HT_PRIME_2 = 37;
 static ht_item HT_DELETED_ITEM = {NULL, NULL};
+static int HT_INITIAL_BASE_SIZE = 53;
 
 // Creates a new hash table item (key-value pair).
 static ht_item* ht_new_item(char* k, char* v) {
@@ -17,15 +19,24 @@ static ht_item* ht_new_item(char* k, char* v) {
     return i; // Returns a pointer to the newly created item.
 }
 
-// Creates and initializes a new hash table.
-ht_hash_table* ht_new() {
-    ht_hash_table* ht = malloc(sizeof(ht_hash_table)); // Allocates memory for the hash table.
-    ht->size = 53;                                    // Sets the initial size of the hash table (prime number).
-    ht->count = 0;                                    // Initializes the item count to 0.
-    ht->items = calloc((size_t)ht->size, sizeof(ht_item*)); // Allocates and zeroes out memory for the array of pointers (buckets).
+// Creates a new hash table with a specified base size.
+static ht_hash_table* ht_new_sized(const int base_size) {
+    ht_hash_table* ht = xmalloc(sizeof(ht_hash_table)); // Allocate memory for the hash table structure.
+    ht->base_size = base_size;                         // Store the base size for resizing logic.
 
-    return ht; // Returns a pointer to the newly created hash table.
+    ht->size = next_prime(ht->base_size);              // Set the table size to the next prime >= base_size.
+    ht->count = 0;                                     // Initialize the count of items to 0.
+
+    // Allocate memory for the hash table buckets, initializing all to NULL.
+    ht->items = xcalloc((size_t)ht->size, sizeof(ht_item*));
+    return ht;                                         // Return the initialized hash table.
 }
+
+// Creates a new hash table with the default initial size.
+ht_hash_table* ht_new() {
+    return ht_new_sized(HT_INITIAL_BASE_SIZE);         // Call the sizing function with the default base size.
+}
+
 
 // Frees memory associated with a hash table item.
 static void ht_del_item(ht_item* i) {

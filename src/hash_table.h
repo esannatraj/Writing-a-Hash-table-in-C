@@ -8,6 +8,7 @@ typedef struct {
 typedef struct {
     int size;      // Total number of buckets (slots) in the hash table.
     int count;     // Number of items currently stored in the hash table.
+    int base_size; // Starting number of buckets in hash table
     ht_item** items; // Array of pointers to ht_item (buckets for key-value pairs).
 } ht_hash_table;
 
