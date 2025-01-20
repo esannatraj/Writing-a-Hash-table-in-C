@@ -145,3 +145,39 @@ void ht_delete(ht_hash_table* ht, const char* key) {
     }
     ht->count--;                              // Decrease the count of items in the hash table.
 }
+
+// Resizes the hash table to a new base size, reallocating and rehashing items.
+static void ht_resize(ht_hash_table* ht, const int base_size) {
+    // Ensure the base size doesn't drop below the initial minimum size.
+    if (base_size < HT_INITIAL_BASE_SIZE) {
+        return; // Skip resizing if the requested size is too small.
+    }
+
+    // Create a new hash table with the specified base size.
+    ht_hash_table* new_ht = ht_new_sized(base_size);
+
+    // Rehash all valid items from the old table into the new table.
+    for (int i = 0; i < ht->size; i++) {
+        ht_item* item = ht->items[i];
+        if (item != NULL && item != &HT_DELETED_ITEM) { // Skip empty and deleted buckets.
+            ht_insert(new_ht, item->key, item->value); // Reinsert item into the new hash table.
+        }
+    }
+
+    // Update the old hash table's metadata to match the new table's base size and item count.
+    ht->base_size = new_ht->base_size;
+    ht->count = new_ht->count;
+
+    // Swap the old hash table's size and items with the new hash table's.
+    const int tmp_size = ht->size;         // Temporarily store the old size.
+    ht->size = new_ht->size;               // Update size to the new table's size.
+    new_ht->size = tmp_size;               // Assign old size to the temporary table.
+    ht_item** tmp_items = ht->items;       // Temporarily store the old items array.
+    ht->items = new_ht->items;             // Update items to point to the new table's array.
+    new_ht->items = tmp_items;             // Assign old items array to the temporary table.
+
+    // Delete the temporary new hash table, which now holds the old data.
+    ht_del_hash_table(new_ht);
+}
+
+}
