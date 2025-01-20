@@ -180,4 +180,14 @@ static void ht_resize(ht_hash_table* ht, const int base_size) {
     ht_del_hash_table(new_ht);
 }
 
+// Doubles the size of the hash table to reduce the load factor and collisions.
+static void ht_resize_up(ht_hash_table* ht) {
+    const int new_size = ht->base_size * 2; // Calculate the new size by doubling the base size.
+    ht_resize(ht, new_size);               // Call the resizing function to expand the hash table.
+}
+
+// Halves the size of the hash table to save memory when underutilized.
+static void ht_resize_down(ht_hash_table* ht) {
+    const int new_size = ht->base_size / 2; // Calculate the new size by halving the base size.
+    ht_resize(ht, new_size);               // Call the resizing function to shrink the hash table.
 }
